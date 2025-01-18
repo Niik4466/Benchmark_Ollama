@@ -30,6 +30,14 @@ parser.add_argument(
     dest="partition"
 )
 
+parser.add_argument(
+    "--port",
+    type=str,
+    default="127.0.0.1:11434",
+    help="Puerto desde donde la API de ollama escucha",
+    dest="port"
+)
+
 args = parser.parse_args()
 
 # -------------- CARGAMOS VARIABLES DE ENTORNO ------------------
@@ -64,6 +72,7 @@ print("Cantidad de repeticiones: ", args.num_rep)
 
 # -------------- LANZAR PRUEBAS ----------------------------
 
+# Funcion auxiliar para encontrar el job_id de un trabajo lanzado
 def get_jobid(result):
         # Verificar si el comando se ejecutó correctamente
     if result.returncode == 0:
@@ -75,8 +84,9 @@ def get_jobid(result):
 
 job_id=-1
 
+# Lanzamos las pruebas con SLURM
 for r in range(args.num_rep):
     for g in range(args.num_gpus):
         for model,weight in zip(models_name_list, model_weight_list):
-            result = subprocess.run([f"./sbatch_generator.sh -p {args.partition} --gpus={g} -m {model} --prompts={prompts_list} -w {weight} --job_id={job_id}"], capture_output=True, text=True, check=True)
+            result = subprocess.run([f"./sbatch_generator.sh -p {args.partition} --gpus={g} -m {model} --prompts={prompts_list} -w {weight} --job_id={job_id} --port={args.port}"], capture_output=True, text=True, check=True)
             job_id = get_jobid(result=result)

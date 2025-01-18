@@ -70,6 +70,13 @@ parser.add_argument(
     default="llama2",
     dest="model"
 )
+parser.add_argument(
+    "-g",
+    required=False,
+    type=int,
+    help="Cantidad de Gpu's utilizadas"
+    dest="gpus"
+)
 
 args = parser.parse_args()
 
@@ -96,4 +103,4 @@ with open(output_file, mode='a', newline='', encoding='utf-8') as csvfile:
         print(f"Tokens/s: {tokens_per_second}")
         print("-" * 40)
         # Escribir en el archivo CSV
-        writer.writerow([prompt, tokens_per_second])
+        writer.writerow([args.model, args.g, ,tokens_per_second])

@@ -9,6 +9,7 @@ usage() {
     echo "  -m <model_name>      : Nombre del modelo a usar"
     echo "  -w <model weight>    : Peso del modelo especificado con -m"
     echo "  --job_id=<job_id>    : Job id del anterior trabajo, si es -1 entonces el lanzamiento sera independiente"
+    echo "  --port=<ip:port>     : Configuracion del puerto para OLLAMA_HOST
     exit 1
 }
 
@@ -28,8 +29,9 @@ while [[ "$#" -gt 0 ]]; do
         -m) model_name="$2"; shift ;;
         -w) model_weight="$2"; shift ;;
         --job_id=*) job_id="${1#*=}" ;;
+	--port=*) port="${1#*=}" ;;
         -h|--help) usage ;;
-        *) echo "Error: Opción desconocida: $1"; usage ;;
+	*) echo "Error: Opción desconocida: $1"; usage ;;
     esac
     shift
 done
@@ -69,13 +71,13 @@ ml gcc/14.2.0-zen4-y python/3.9.19-zen4-l
 
 # ----------------Comandos--------------------------
 
-export OLLAMA_HOST=127.0.0.1:44313
+export OLLAMA_HOST=${port}
 
 ~/ollama/bin/ollama serve &
 sleep 2
 
 # Ejecutar el script Python con los prompts
-python run_test.py --prompts="${prompts}"
+python run_test.py --prompts=${prompts} -m ${model_name} --port=${port} -g ${gpu}
 EOF
 
 # Enviar el script a la cola de trabajos
