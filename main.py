@@ -88,5 +88,19 @@ job_id=-1
 for r in range(args.num_rep):
     for g in range(args.num_gpus):
         for model,weight in zip(models_name_list, model_weight_list):
-            result = subprocess.run([f"./sbatch_generator.sh -p {args.partition} --gpus={g} -m {model} --prompts={prompts_list} -w {weight} --job_id={job_id} --port={args.port}"], capture_output=True, text=True, check=True)
+            result = subprocess.run(
+            [
+                "./sbatch_generator.sh",
+                "-p", args.partition,
+                f"--gpus={g}",
+                "-m", model,
+                f"--prompts={prompts_list}",
+                "-w", weight,
+                f"--job_id={job_id}",
+                f"--port={args.port}"
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+            )
             job_id = get_jobid(result=result)
