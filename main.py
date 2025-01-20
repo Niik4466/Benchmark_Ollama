@@ -1,4 +1,4 @@
-import json, os, argparse, subprocess
+import json, os, argparse, subprocess, re
 from dotenv import load_dotenv
 
 
@@ -74,13 +74,12 @@ print("Cantidad de repeticiones: ", args.num_rep)
 
 # Funcion auxiliar para encontrar el job_id de un trabajo lanzado
 def get_jobid(result):
-        # Verificar si el comando se ejecutó correctamente
-    if result.returncode == 0:
-        # Extraer el JOB ID usando una expresión regular
-        match = result.search(r"Submitted batch job (\d+)", result.stdout)
-        if match:
-            job_id = match.group(1)
-        return job_id
+    # Busca en result.stdout usando re.search
+    match = re.search(r"Submitted batch job (\d+)", result.stdout)
+    if match:
+        return match.group(1)  # Retorna el job_id encontrado
+    else:
+        raise ValueError("No se pudo encontrar el Job ID en la salida proporcionada.")
 
 job_id=-1
 
