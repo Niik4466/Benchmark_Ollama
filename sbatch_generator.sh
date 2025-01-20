@@ -9,7 +9,7 @@ usage() {
     echo "  -m <model_name>      : Nombre del modelo a usar"
     echo "  -w <model weight>    : Peso del modelo especificado con -m"
     echo "  --job_id=<job_id>    : Job id del anterior trabajo, si es -1 entonces el lanzamiento sera independiente"
-    echo "  --port=<ip:port>     : Configuracion del puerto para OLLAMA_HOST
+    echo "  --port=<ip:port>     : Configuracion del puerto para OLLAMA_HOST"
     exit 1
 }
 
@@ -54,7 +54,7 @@ if ! [[ "$model_weight" =~ ^[0-9]+$ ]]; then
 fi
 
 # Crear un script temporal para SBATCH
-temp_script=$(mktemp)
+temp_script="${current_dir}/sbatch_script_$$.job"
 cat <<EOF > "$temp_script"
 #!/bin/bash
 #SBATCH -J ollama_bench_${model_name}
