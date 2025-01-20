@@ -100,7 +100,7 @@ file_exists = os.path.isfile(output_file)
 
 # Procesamos e modelo para obtener la cantidad de parametros y la quantizacion
 params = args.model.strip(":")
-quantization = params.strip("-")[1]
+quantization = params.strip("-")[2]
 model_name=params[0]
 params=quantization[0]
 
