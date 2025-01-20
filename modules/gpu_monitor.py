@@ -40,9 +40,7 @@ class GpuMonitor():
             self.thread.join()
     
     def _monitor(self):
-        # Comenzamos el polling para utilizar el metodo query_utilisation()
-        for i in range((self.gpus)): self.gpus[i].start_query_utilisation_polling()
-        # Comenzamos a registrar las metricas una vez el consumo de energia sea mayor que 47 mW
+        # Comenzamos a registrar las metricas una vez el consumo de energia sea mayor que 41 mW
         start = False
         while self.running:
             if start:
@@ -54,7 +52,6 @@ class GpuMonitor():
             else:
                 start = any(gpu.query_power() > 41 for gpu in self.gpus)
             time.sleep(self.interval)
-        for i in range(len(self.gpus)): self.gpus[i].stop_query_utilisation_polling()
 
     def get_stats(self):
         """
@@ -62,8 +59,6 @@ class GpuMonitor():
         """
         stats = {}
         for idx in range(len(self.gpus)):
-            stats[f"gpu_{idx}_utilisation_avg"] = sum(self.utilisation[idx]) / len(self.utilisation[idx]) if self.utilisation[idx] else None
-            stats[f"gpu_{idx}_utilisation_max"] = max(self.utilisation[idx]) if self.utilisation[idx] else None
             stats[f"gpu_{idx}_vram_usage_avg"] = sum(self.vram_usage[idx]) / len(self.vram_usage[idx]) if self.vram_usage[idx] else None
             stats[f"gpu_{idx}_vram_usage_max"] = max(self.vram_usage[idx]) if self.vram_usage[idx] else None
             stats[f"gpu_{idx}_power_avg"] = sum(self.power[idx]) / len(self.power[idx]) if self.power[idx] else None
