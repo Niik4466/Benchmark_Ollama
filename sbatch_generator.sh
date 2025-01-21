@@ -29,9 +29,9 @@ while [[ "$#" -gt 0 ]]; do
         -m) model_name="$2"; shift ;;
         -w) model_weight="$2"; shift ;;
         --job_id=*) job_id="${1#*=}" ;;
-	    --port=*) port="${1#*=}" ;;
+        --port=*) port="${1#*=}" ;;
         -h|--help) usage ;;
-	*) echo "Error: Opción desconocida: $1"; usage ;;
+	    *) echo "Error: Opción desconocida: $1"; usage ;;
     esac
     shift
 done
@@ -57,7 +57,7 @@ fi
 temp_script="$(pwd)/sbatch_script_$$.job"
 cat <<EOF > "$temp_script"
 #!/bin/bash
-#SBATCH -J ollama_bench_${model_name}
+#SBATCH -J ollama_bench_${model_name}_${partition}
 #SBATCH -p ${partition}
 #SBATCH -n 1
 #SBATCH -c 1

@@ -42,11 +42,10 @@ args = parser.parse_args()
 
 # -------------- CARGAMOS VARIABLES DE ENTORNO ------------------
 
-# Cargar archivos desde un .env
-load_dotenv()
-models_json_path=os.getenv('MODELS_JSON_PATH')
-prompts_json_path = os.getenv('PROMPTS_JSON_PATH')
-result_path = os.getenv('RESULT_PATH')
+models_json_path = os.getenv('MODELS_JSON_PATH') or 'models.JSON'
+prompts_json_path = os.getenv('PROMPTS_JSON_PATH') or 'prompts.JSON'
+result_path = os.getenv('RESULT_PATH') or '.'
+
 
 
 # -------------- CARGAMOS DATOS DE LOS MODELOS ------------------
