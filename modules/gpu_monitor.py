@@ -46,9 +46,8 @@ class GpuMonitor():
             if start:
                 # Registramos las metricas para cada gpu
                 for id_gpu in range(len(self.gpus)):
-                    self.utilisation[id_gpu].append((self.gpus[id_gpu].query_utilisation()))
                     self.vram_usage[id_gpu].append(self.gpus[id_gpu].query_vram_usage())
-                    self.power.append(self.gpus[id_gpu].query_power())
+                    self.power[id_gpu].append(self.gpus[id_gpu].query_power())
             else:
                 start = any(gpu.query_power() > 41 for gpu in self.gpus)
             time.sleep(self.interval)

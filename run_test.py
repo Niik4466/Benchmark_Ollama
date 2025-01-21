@@ -1,10 +1,11 @@
 import requests
+import json
 import argparse
 import csv
 import os
 from modules.gpu_monitor import GpuMonitor
 
-def query_ollama(prompts, model="llama2", port="127.0.0.1:11434"):
+def query_ollama(prompt, model="llama2", port="127.0.0.1:11434"):
     """
     Envía una consulta directa a la API de Ollama y devuelve los tokens/s junto con el prompt.
 
@@ -16,40 +17,51 @@ def query_ollama(prompts, model="llama2", port="127.0.0.1:11434"):
     Returns:
         tuple: Prompt, tokens/s (o un mensaje de error si algo falla), objeto gpu_monitor con los datos de uso de gpu
     """
-    url = f"http://{port}/api/query"
+    # Definimos la url a consultar y los headers de la consulta
+    url = f"http://{port}/api/generate"
     headers = {
         "Content-Type": "application/json",
     }
 
-    for prompt in prompts:
-        payload = {
-            "model": model,
-            "prompt": prompt
-        }
+    # Definimos la consulta
+    payload = {
+        "model": model,
+        "prompt": prompt
+    }
     
+    # Definimos nuestro objeto GpuMonitor para monitorear los recursos
     gpu_monitor = GpuMonitor(0.1)
 
+    # Empezamos el monitoreo
     gpu_monitor.start()
     try:
+        # Realizamos la consulta a la API. Importante considerar que se nos devuelve un stream de Jsons no uno unico
         response = requests.post(url, json=payload, headers=headers)
+        # Terminamos de monitorear la gpu una vez esta lista la respuesta
         gpu_monitor.stop()
 
         response.raise_for_status()  # Lanza una excepción para errores HTTP
-        data = response.json()
+        # Iteramos por sobre la respuesta para obtener el ultimo Json que contiene los datos necesarios.
+        for line in response.iter_lines(decode_unicode=True):
+            if line.strip(): # Ignoramos las lineas vacias
+                data = json.loads(line)
         
         # Extraer la duración de la evaluación y la cantidad de evaluaciones
-        prompt_eval_duration = data.get("prompt_eval_duration", 0)  # En microsegundos
-        prompt_eval_count = data.get("prompt_eval_count", 1)  # Asumimos al menos una evaluación
+        prompt_eval_duration = data.get("eval_duration", 0)  # En Nanosegundos
+        prompt_eval_count = data.get("eval_count", 0) 
         
         # Si los valores están disponibles, calcular los tokens por segundo
         if prompt_eval_duration > 0 and prompt_eval_count > 0:
-            # Convertir la duración de microsegundos a segundos
-            tokens_per_second = (prompt_eval_count / (prompt_eval_duration / 1_000_000))
+            # Calcular tokens/s
+            tokens_per_second = prompt_eval_count / (prompt_eval_duration / 1e9)
+            print("Respuesta completa:", response.text)
             return prompt, tokens_per_second, gpu_monitor
         else:
             return prompt, "No disponible", gpu_monitor
-    
+
     except requests.exceptions.RequestException as e:
+        print(f"Error al hacer la solicitud: {e}")
+        print("Respuesta completa:", response.text)
         return prompt, f"Error: {e}", gpu_monitor
 
 # Configuración del parser de argumentos
@@ -99,10 +111,13 @@ output_file = os.path.join(result_path, "ollama_results.csv")
 file_exists = os.path.isfile(output_file)
 
 # Procesamos e modelo para obtener la cantidad de parametros y la quantizacion
-params = args.model.strip(":")
-quantization = params.strip("-")[2]
-model_name=params[0]
-params=quantization[0]
+#params = args.model.split(":")
+#quantization = params[1].split("-")[2]
+#model_name=params[0]
+#params=params[1].split("-")[0]
+model_name="llama2"
+params = "7b"
+quantization = "q4"
 
 # Procesar prompts y registrar resultados
 with open(output_file, mode='a', newline='', encoding='utf-8') as csvfile:
@@ -145,8 +160,8 @@ with open(output_file, mode='a', newline='', encoding='utf-8') as csvfile:
 
     for prompt in prompt_list:
         print(f"Consultando con el prompt: {prompt.strip()}")
-        prompt, tokens_per_second, gpu_monitor = query_ollama(prompt.strip(), model=args.model, port=args.port)
+        prompt, tokens_per_second, gpu_monitor = query_ollama(prompt.strip(), model=args.model.strip(), port=args.port)
         gpu_stats = gpu_monitor.get_stats()
         sorted_gpu_stats = {key: gpu_stats[key] for key in sorted(gpu_stats.keys())}
         # Escribir en el archivo CSV
-        writer.writerow([model_name, params, quantization, tokens_per_second, args.g] + list(sorted_gpu_stats))
+        writer.writerow([model_name, params, quantization, tokens_per_second, args.gpus] + list(sorted_gpu_stats.values()))

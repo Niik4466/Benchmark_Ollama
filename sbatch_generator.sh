@@ -29,7 +29,7 @@ while [[ "$#" -gt 0 ]]; do
         -m) model_name="$2"; shift ;;
         -w) model_weight="$2"; shift ;;
         --job_id=*) job_id="${1#*=}" ;;
-	--port=*) port="${1#*=}" ;;
+	    --port=*) port="${1#*=}" ;;
         -h|--help) usage ;;
 	*) echo "Error: Opción desconocida: $1"; usage ;;
     esac
@@ -54,33 +54,39 @@ if ! [[ "$model_weight" =~ ^[0-9]+$ ]]; then
 fi
 
 # Crear un script temporal para SBATCH
-temp_script="${current_dir}/sbatch_script_$$.job"
+temp_script="$(pwd)/sbatch_script_$$.job"
 cat <<EOF > "$temp_script"
 #!/bin/bash
 #SBATCH -J ollama_bench_${model_name}
 #SBATCH -p ${partition}
 #SBATCH -n 1
 #SBATCH -c 1
-#SBATCH --mem-per-cpu=${model_weight}
+#SBATCH --mem=${model_weight}
 #SBATCH --gres=gpu:${gpus}
 #SBATCH -o logs/ollama_bench_${model_name}_%j.out.err
 #SBATCH -e logs/ollama_bench_${model_name}_%j.out.err
 
 # ----------------Modulos----------------------------
-ml gcc/14.2.0-zen4-y python/3.9.19-zen4-l
-
+ml aocc gcc/14.2.0-zen4-y python/3.9.19-zen4-l
+ml py-torch ollama
 # ----------------Comandos--------------------------
 
 export OLLAMA_HOST=${port}
 
 ~/ollama/bin/ollama serve &
-sleep 2
+sleep 3
+
+# Cargar ambiente venv
+source ollama_bench/bin/activate
 
 # Ejecutar el script Python con los prompts
-python run_test.py --prompts=${prompts} -m ${model_name} --port=${port} -g ${gpu}
+python run_test.py --prompts=${prompts} -m ${model_name} --port=${port} -g ${gpus}
 EOF
 
 # Enviar el script a la cola de trabajos
+cat "$temp_script"
+chmod 755 "$temp_script"
+
 if [[ job_id != -1 ]]; then
     sbatch "$temp_script"
 else

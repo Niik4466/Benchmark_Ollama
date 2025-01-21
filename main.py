@@ -91,7 +91,7 @@ for r in range(args.num_rep):
             [
                 "./sbatch_generator.sh",
                 "-p", args.partition,
-                f"--gpus={g}",
+                f"--gpus={g+1}",
                 "-m", model,
                 f"--prompts={prompts_list}",
                 "-w", weight,
@@ -103,3 +103,4 @@ for r in range(args.num_rep):
             check=True
             )
             job_id = get_jobid(result=result)
+            print(f"Job {job_id} en cola")
