@@ -110,6 +110,11 @@ El programa `main.py` utiliza variables de entorno para configurar ciertos aspec
     **Por defecto**: `.`  
     **Ejemplo**: `/path/to/results`.
 
+- **`DEVICE_BACKEND`**:
+    Indica con que software van a correr las pruebas `cuda/rocm`. El programa utilizara cierta libreria para medir el uso dependiendo del backend.
+    **Por defecto**: `rocm`
+    **Ejemplo**: `cuda`
+
 #### Configuración temporal
 Puedes exportar las variables directamente en la terminal antes de ejecutar el script:
 
@@ -117,4 +122,5 @@ Puedes exportar las variables directamente en la terminal antes de ejecutar el s
 export MODELS_JSON_PATH=/path/to/models.JSON
 export PROMPTS_JSON_PATH=/path/to/prompts.JSON
 export RESULT_PATH=/path/to/results
+export DEVICE_BACKEND=rocm
 ```
