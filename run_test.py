@@ -31,7 +31,8 @@ def query_ollama(prompt, model="llama2", port="127.0.0.1:11434"):
     # Definimos la consulta
     payload = {
         "model": model,
-        "prompt": prompt
+        "prompt": prompt,
+        "stream": False
     }
     
     # Definimos nuestro objeto GpuMonitor para monitorear los recursos
@@ -39,6 +40,7 @@ def query_ollama(prompt, model="llama2", port="127.0.0.1:11434"):
 
     # Empezamos el monitoreo
     gpu_monitor.start()
+
     try:
         # Realizamos la consulta a la API. Importante considerar que se nos devuelve un stream de Jsons no uno unico
         response = requests.post(url, json=payload, headers=headers)
@@ -46,11 +48,10 @@ def query_ollama(prompt, model="llama2", port="127.0.0.1:11434"):
         gpu_monitor.stop()
 
         response.raise_for_status()  # Lanza una excepción para errores HTTP
-        # Iteramos por sobre la respuesta para obtener el ultimo Json que contiene los datos necesarios.
-        for line in response.iter_lines(decode_unicode=True):
-            if line.strip(): # Ignoramos las lineas vacias
-                data = json.loads(line)
-        
+
+        # Cargamos los datos del JSON de respuesta
+        data = response.json()
+
         # Extraer la duración de la evaluación y la cantidad de evaluaciones
         prompt_eval_duration = data.get("eval_duration", 0)  # En Nanosegundos
         prompt_eval_count = data.get("eval_count", 0) 
@@ -68,6 +69,66 @@ def query_ollama(prompt, model="llama2", port="127.0.0.1:11434"):
         print(f"Error al hacer la solicitud: {e}")
         print("Respuesta completa:", response.text)
         return prompt, f"Error: {e}", gpu_monitor
+
+def download_model_ollama(model="llama2", port="127.0.0.1:11434"):
+    """
+    Envia un request a Ollama para descargar el modelo si no existe
+
+    Args:
+        model (str): El modelo a utilizar (por defecto, 'llama2').
+        port (str): El puerto donde se ejecuta el servicio Ollama (por defecto, 127.0.0.1:11434).
+    """
+    
+    # Definimos la url a consultar y los headers de la consulta
+    url = f"http://{port}/api/pull"
+    headers = {
+        "Content-Type": "application/json",
+    }
+    
+    # Definimos la consulta
+    payload = {
+        "model": model,
+        "stream": False
+    }
+    
+    # Realizamos la consulta al endpoint especificado
+    response = requests.post(url, json=payload, headers=headers)
+
+    # Obtenemos el resultado de la consulta
+    data = response.json()
+
+    # Retornamos True si fue posible hacer pull al modelo, false si no 
+    result = data.get("status")
+    return (result == "success")
+
+def obtain_model_data_ollama(model="llama2", port="127.0.0.1:11434"):
+    """
+    
+    """
+
+    # Definimos la url y los headers de la consulta
+    url = f"http://{port}/api/show"
+    headers = {
+        "Content-Type": "application/json",
+    }
+    
+    # Definimos la consulta
+    payload = {
+        "model": model,
+        "stream": "false"
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        parameter_size = data["details"]["parameter_size"]
+        quantization = data["details"]["quantization_level"]
+        return parameter_size, quantization
+    except requests.exceptions.RequestException as e:
+        print(f"Error al obtener los datos del modelo {model}")
+        return f"Error {e}", f"Error {e}"
+
 
 # Configuración del parser de argumentos
 parser = argparse.ArgumentParser(description="Script para consultar la API de Ollama y registrar tokens/s")
@@ -115,14 +176,12 @@ output_file = os.path.join(result_path, "ollama_results.csv")
 # Verificar si el archivo ya existe para agregar encabezados solo si es necesario
 file_exists = os.path.isfile(output_file)
 
-# Procesamos e modelo para obtener la cantidad de parametros y la quantizacion
-#params = args.model.split(":")
-#quantization = params[1].split("-")[2]
-#model_name=params[0]
-#params=params[1].split("-")[0]
-model_name="llama2"
-params = "7b"
-quantization = "q4"
+# Descargamos el modelo
+download_model_ollama(model=args.model, port=args.port)
+
+# Obtenemos el detalle del modelo
+model_name = args.model
+params, quantization = obtain_model_data_ollama(model=model_name, port=args.port)
 
 # Procesar prompts y registrar resultados
 with open(output_file, mode='a', newline='', encoding='utf-8') as csvfile:
