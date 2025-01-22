@@ -78,12 +78,6 @@ El programa `main.py` incluye varios parámetros que permiten personalizar la ej
   **Ejemplo**: `--port 127.0.0.1:8080`.
 
 
-## Variables de entorno
-
-Aquí tienes la sección de variables de entorno para tu archivo `README.md`:
-
----
-
 ## Variables de Entorno
 
 El programa `main.py` utiliza variables de entorno para configurar ciertos aspectos del benchmark. A continuación, se describen:
