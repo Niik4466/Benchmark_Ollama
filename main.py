@@ -1,6 +1,4 @@
 import json, os, argparse, subprocess, re
-from dotenv import load_dotenv
-
 
 # -------------- SETEAMOS LAS FLAGS -------------------
 

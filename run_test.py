@@ -3,7 +3,12 @@ import json
 import argparse
 import csv
 import os
-from modules.gpu_monitor import GpuMonitor
+
+backend = os.getenv("DEVICE_BACKEND") or "rocm"
+if (backend == "rocm"):
+    from modules.gpu_monitor_AMD import GpuMonitor
+else:
+    from modules.gpu_monitor_CUDA import GpuMonitor
 
 def query_ollama(prompt, model="llama2", port="127.0.0.1:11434"):
     """

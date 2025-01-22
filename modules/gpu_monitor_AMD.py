@@ -18,7 +18,6 @@ class GpuMonitor():
         self.interval = interval
         gpus_ids = list(map(int, os.getenv('ROCR_VISIBLE_DEVICES').split(",")))
         self.gpus = list(map(get_gpu, gpus_ids))
-        self.utilisation = [[] for _ in range(len(self.gpus))]
         self.vram_usage = [[] for _ in range(len(self.gpus))]
         self.power = [[] for _ in range(len(self.gpus))]
         self.running = False
