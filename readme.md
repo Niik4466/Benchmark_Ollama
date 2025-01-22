@@ -55,13 +55,6 @@ Para ejecutar el benchmark se deben seguir los siguientes pasos posteriores a la
 
 ## Parametros
 
-el programa `main.py` tiene varios parametros para personalizar la ejecucion del benchmark
-Claro, aquí tienes la sección de parámetros completada para tu archivo `README.md`:
-
----
-
-## Parámetros
-
 El programa `main.py` incluye varios parámetros que permiten personalizar la ejecución del benchmark.
 
 - **`--gpus`, `-g`**:  
