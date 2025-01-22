@@ -67,11 +67,11 @@ cat <<EOF > "$temp_script"
 #SBATCH -e logs/ollama_bench_${model_name}_%j.out.err
 
 # ----------------Modulos----------------------------
-ml aocc gcc/14.2.0-zen4-y python/3.9.19-zen4-l
-ml py-torch ollama
+ml ollama
 # ----------------Comandos--------------------------
 
 export OLLAMA_HOST=${port}
+export OLLAMA_MODELS="$MODELS_DIR"
 
 ~/ollama/bin/ollama serve &
 sleep 3
