@@ -115,6 +115,11 @@ El programa `main.py` utiliza variables de entorno para configurar ciertos aspec
     **Por defecto**: `rocm`
     **Ejemplo**: `cuda`
 
+- **`MODELS_DIR`**:
+    Indica al servicio de ollama de que directorio obtendra y descargara los modelos a utilizar en el archivo `models.JSON`
+    **Por defecto**: `~/.ollama/models`
+    **Ejemplo**: `~/ollama_models`
+
 #### Configuración temporal
 Puedes exportar las variables directamente en la terminal antes de ejecutar el script:
 
@@ -123,4 +128,5 @@ export MODELS_JSON_PATH=/path/to/models.JSON
 export PROMPTS_JSON_PATH=/path/to/prompts.JSON
 export RESULT_PATH=/path/to/results
 export DEVICE_BACKEND=rocm
+export MODELS_DIR=/path/to/models
 ```
