@@ -43,7 +43,7 @@ args = parser.parse_args()
 models_json_path = os.getenv('MODELS_JSON_PATH') or 'models.JSON'
 prompts_json_path = os.getenv('PROMPTS_JSON_PATH') or 'prompts.JSON'
 result_path = os.getenv('RESULT_PATH') or '.'
-
+device_backend = os.getenv("DEVICE_BACKEND") or 'rocm'
 
 
 # -------------- CARGAMOS DATOS DE LOS MODELOS ------------------
@@ -61,11 +61,15 @@ prompts_list = prompts_dict.get('prompts', [])
 
 # -------------- INFORMACION DE CONFIGURACION ---------------
 
-print("Modelos:", models_name_list)
-print("Model weights", model_weight_list)
-print("Prompts:", prompts_list)
-print("Gpus a utilizar: ", args.num_gpus)
-print("Cantidad de repeticiones: ", args.num_rep)
+print("########## INFORMACION DE EJECUCION ###########\n\n")
+print("Modelos:\t", models_name_list)
+print("Model weights:\t", model_weight_list)
+print("Prompts:\t", prompts_list)
+print("Gpus a utilizar:\t", args.num_gpus)
+print("Gpu Backend:\t", device_backend)
+print("Repeticiones\t", args.num_rep)
+print("Results dir:\t", result_path)
+print("\n\n###############################################")
 
 # -------------- LANZAR PRUEBAS ----------------------------
 
