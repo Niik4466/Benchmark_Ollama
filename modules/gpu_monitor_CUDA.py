@@ -4,7 +4,7 @@ import threading
 import time
 
 class GpuMonitor():
-    def __init__(self, interval=0.1):
+    def __init__(self, interval=1):
         """
         Detecta las GPU's disponibles, asigna una lista de objetos gpu1, gpu2, gpuX
 
@@ -48,9 +48,9 @@ class GpuMonitor():
                 # Registramos las metricas para cada gpu
                 for idx, gpu in enumerate(self.gpus):
                     self.vram_usage[idx].append(nvmlDeviceGetMemoryInfo(gpu).used)
-                    self.power[idx].append(nvmlDeviceGetPowerUsage(gpu))
+                    self.power[idx].append(nvmlDeviceGetPowerUsage(gpu)/1000)
             else:
-                start = any(nvmlDeviceGetPowerUsage(gpu) > 41 for gpu in self.gpus)
+                start = any(nvmlDeviceGetPowerUsage(gpu) > 7 for gpu in self.gpus)
             time.sleep(self.interval)
 
     def get_stats(self):

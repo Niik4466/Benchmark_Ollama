@@ -1,4 +1,4 @@
 {
-    "models": ["model1", "model2", "model3"],
-    "weights": ["x1", "x2", "x3"]
+    "models": ["llama2", "llama2:7b-chat-q8_0", "llama2:7b-text-fp16", "llama2:13b-chat-q4_0", "llama2:13b-chat-q8_0", "llama2:13b-text-fp16", "llama2:70b", "llama2:70b-chat-q8_0", "llama2:70b-chat-fp16"],
+    "weights": ["20000", "30000", "40000", "40000", "40000", "80000", "80000", "120000", "180000"]
 }

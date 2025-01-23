@@ -3,6 +3,8 @@ import json
 import argparse
 import csv
 import os
+import sys
+import re
 
 backend = os.getenv("DEVICE_BACKEND") or "rocm"
 if (backend == "rocm"):
@@ -129,6 +131,38 @@ def obtain_model_data_ollama(model="llama2", port="127.0.0.1:11434"):
         print(f"Error al obtener los datos del modelo {model}")
         return f"Error {e}", f"Error {e}"
 
+def calcular_peso_teorico(parametros, cuantizacion):
+    """
+    Calcula el peso teórico de un modelo basado en el número de parámetros y la cuantización.
+
+    Args:
+        parametros (str): Número de parámetros como string (por ejemplo, "13B", "7B").
+        cuantizacion (str): Cuantización como string (por ejemplo, "Q4_0", "F16").
+
+    Returns:
+        float: Peso teórico en GB.
+    """
+    # Convertir los parámetros a número
+    escala = {"B": 1e9, "M": 1e6}  # Escalas para billones (B) y millones (M)
+    unidad = parametros[-1].upper()  # Último carácter para determinar escala
+    if unidad not in escala:
+        raise ValueError(f"Unidad desconocida en parámetros: {unidad}")
+
+    num_parametros = float(parametros[:-1]) * escala[unidad]  # Convertir a número total de parámetros
+
+    # Extraer el número de bits del string de cuantización
+    match = re.match(r"[A-Za-z]*(\d+)", cuantizacion)  # Captura el primer número
+    if not match:
+        raise ValueError(f"Formato de cuantización inválido: {cuantizacion}")
+    
+    bits = int(match.group(1))  # Obtiene el primer número del string
+    tamanio_parametro = bits / 8  # Convertir bits a bytes
+
+    # Calcular peso total en bytes
+    peso_en_bytes = num_parametros * tamanio_parametro
+    peso_en_gb = peso_en_bytes / (1e9)  # Convertir bytes a GB
+
+    return peso_en_gb
 
 # Configuración del parser de argumentos
 parser = argparse.ArgumentParser(description="Script para consultar la API de Ollama y registrar tokens/s")
@@ -171,6 +205,10 @@ prompt_list = args.prompts.strip('[]').split(',')
 
 # Obtener ruta del archivo de resultados desde la variable de entorno
 result_path = os.environ.get("RESULT_PATH", ".")  # Por defecto, usar el directorio actual
+try:
+    max_vram = int(os.environ.get("MAX_VRAM", "64")) # Maxima VRAM disponible por gpu, por defecto 64
+except ValueError:
+    max_vram = 64
 output_file = os.path.join(result_path, "ollama_results.csv")
 
 # Verificar si el archivo ya existe para agregar encabezados solo si es necesario
@@ -182,6 +220,13 @@ download_model_ollama(model=args.model, port=args.port)
 # Obtenemos el detalle del modelo
 model_name = args.model
 params, quantization = obtain_model_data_ollama(model=model_name, port=args.port)
+print(f"params {params}")
+print(f"quantization {quantization}")
+peso_teorico = calcular_peso_teorico(params, quantization)
+
+if (peso_teorico+2 > max_vram*args.gpus):
+    print("Error: El peso teorico excede la VRAM disponible")
+    sys.exit()
 
 # Procesar prompts y registrar resultados
 with open(output_file, mode='a', newline='', encoding='utf-8') as csvfile:
@@ -193,34 +238,30 @@ with open(output_file, mode='a', newline='', encoding='utf-8') as csvfile:
                         , "Quantization"
                         , "Tokens/s"
                         , "Num_Gpus"
-                        , "GPU_0_VRAM_usage_avg"
-                        , "GPU_0_VRAM_usage_max"
                         , "GPU_0_Power_avg"
                         , "GPU_0_Power_max"
-                        , "GPU_1_VRAM_usage_avg"
-                        , "GPU_1_VRAM_usage_max"
+                        , "GPU_0_VRAM_usage_avg"
+                        , "GPU_0_VRAM_usage_max"
                         , "GPU_1_Power_avg"
                         , "GPU_1_Power_max"
-                        , "GPU_2_VRAM_usage_avg"
-                        , "GPU_2_VRAM_usage_max"
+                        , "GPU_1_VRAM_usage_avg"
+                        , "GPU_1_VRAM_usage_max"
                         , "GPU_2_Power_avg"
                         , "GPU_2_Power_max"
-                        , "GPU_3_VRAM_usage_avg"
-                        , "GPU_3_VRAM_usage_max"
+                        , "GPU_2_VRAM_usage_avg"
+                        , "GPU_2_VRAM_usage_max"
                         , "GPU_3_Power_avg"
                         , "GPU_3_Power_max"
-                        , "GPU_4_VRAM_usage_avg"
-                        , "GPU_4_VRAM_usage_max"
+                        , "GPU_3_VRAM_usage_avg"
+                        , "GPU_3_VRAM_usage_max"
                         , "GPU_4_Power_avg"
                         , "GPU_4_Power_max"
-                        , "GPU_5_VRAM_usage_avg"
-                        , "GPU_5_VRAM_usage_max"
+                        , "GPU_4_VRAM_usage_avg"
+                        , "GPU_4_VRAM_usage_max"
                         , "GPU_5_Power_avg"
                         , "GPU_5_Power_max"
-                        , "GPU_6_VRAM_usage_avg"
-                        , "GPU_6_VRAM_usage_max"
-                        , "GPU_6_Power_avg"
-                        , "GPU_6_Power_max"])
+                        , "GPU_5_VRAM_usage_avg"
+                        , "GPU_5_VRAM_usage_max"])
 
     for prompt in prompt_list:
         print(f"Consultando con el prompt: {prompt.strip()}")

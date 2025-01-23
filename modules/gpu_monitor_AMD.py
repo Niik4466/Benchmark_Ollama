@@ -4,7 +4,7 @@ import threading
 import time
 
 class GpuMonitor():
-    def __init__(self, interval=0.1):
+    def __init__(self, interval=1):
         """
         Detecta las GPU's disponibles, asigna una lista de objetos gpu1, gpu2, gpuX
 
